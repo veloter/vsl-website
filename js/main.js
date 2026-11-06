@@ -170,32 +170,63 @@
         return;
       }
 
-      /* ── Option A (active): mailto fallback ── */
-      var subject = encodeURIComponent('New project inquiry: ' + service + ' (' + name.trim() + ')');
-      var body = encodeURIComponent(
-        'Name: ' + name.trim() + '\n' +
-        'Email: ' + email.trim() + '\n' +
-        'Service: ' + service + '\n' +
-        'Budget: ' + budget + '\n\n' +
-        'Project brief:\n' + message.trim() + '\n'
-      );
-      window.location.href = 'mailto:hello@veloter.com?subject=' + subject + '&body=' + body;
-      showNote('Opening your email client, or write us directly at hello@veloter.com', 'ok');
+      function triggerMailtoFallback(noteMsg) {
+        var subject = encodeURIComponent('New project inquiry: ' + service + ' (' + name.trim() + ')');
+        var body = encodeURIComponent(
+          'Name: ' + name.trim() + '\n' +
+          'Email: ' + email.trim() + '\n' +
+          'Service: ' + service + '\n' +
+          'Budget: ' + budget + '\n\n' +
+          'Project brief:\n' + message.trim() + '\n'
+        );
+        window.location.href = 'mailto:hello@veloter.com?subject=' + subject + '&body=' + body;
+        showNote(noteMsg || 'Opening your email client, or write us directly at hello@veloter.com', 'ok');
+      }
 
-      /* ── Option B (once wired to Formspree/Web3Forms, replace the
-            mailto block above with the fetch below) ──
-      fetch('https://formspree.io/f/YOUR_FORM_ID', {
+      var origBtnHtml = submitBtn ? submitBtn.innerHTML : 'Send message';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = 'Sending...';
+      }
+      showNote('Sending your message...', '');
+
+      // Dynamic serverless submission via Cloudflare Pages Function (/api/contact)
+      fetch('/api/contact', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ name: name, email: email, service: service, budget: budget, message: message })
-      }).then(function (r) {
-        if (r.ok) { form.reset(); showNote('Message sent, we will reply within one business day.', 'ok'); }
-        else showNote('Something went wrong. Please email hello@veloter.com directly.', 'err');
-      }).catch(function () {
-        showNote('Network error, please email hello@veloter.com directly.', 'err');
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim(),
+          service: service,
+          budget: budget,
+          message: message.trim()
+        })
+      })
+      .then(function (r) {
+        if (!r.ok && r.status === 404) {
+          return { success: false, fallback: true };
+        }
+        return r.json().catch(function () { return { success: false, fallback: true }; });
+      })
+      .then(function (data) {
+        if (data && data.success) {
+          form.reset();
+          showNote('Message sent successfully! We will reply within one business day.', 'ok');
+        } else if (data && data.fallback) {
+          triggerMailtoFallback('Opening your email client to complete message...');
+        } else {
+          showNote((data && (data.message || data.error)) || 'Something went wrong. Please email hello@veloter.com directly.', 'err');
+        }
+      })
+      .catch(function () {
+        triggerMailtoFallback('Opening your email client...');
+      })
+      .then(function () {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = origBtnHtml;
+        }
       });
-      */
-      if (submitBtn) { /* kept for future async handling */ }
     });
   }
 })();
