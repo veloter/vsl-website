@@ -173,19 +173,13 @@
       var WEB3FORMS_KEY = '583297e4-5ec3-4150-9c19-effa43299230';
 
       function submitToWeb3Direct() {
+        var fd = new FormData(form);
+        if (!fd.get('access_key')) fd.append('access_key', WEB3FORMS_KEY);
+        if (!fd.get('from_name')) fd.append('from_name', 'Veloter Software Lab Inquiries');
+        if (!fd.get('subject')) fd.append('subject', 'New Lead: ' + (service || 'General') + ' from ' + name.trim());
         return fetch('https://api.web3forms.com/submit', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-          body: JSON.stringify({
-            access_key: WEB3FORMS_KEY,
-            from_name: 'Veloter Software Lab Inquiries',
-            subject: 'New Lead: ' + (service || 'General') + ' from ' + name.trim(),
-            name: name.trim(),
-            email: email.trim(),
-            service: service,
-            budget: budget,
-            message: message.trim()
-          })
+          body: fd
         }).then(function (res) { return res.json(); });
       }
 
