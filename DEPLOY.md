@@ -73,27 +73,25 @@ Search for `EDIT:` comments inside `index.html` (they mark every spot). Summary:
 | Projects | `index.html` "Representative work" section | Sample case studies · replace with yours |
 | Testimonials | `index.html` "Client words" section | Sample quotes · replace with real ones |
 
-## Wire the contact form (2 minutes, free)
+## Wire the dynamic contact form (2 minutes, free)
 
-Until wired, the form opens the visitor's email client with the message prefilled (works out of the box).
+The contact form is wired to a serverless Cloudflare Pages Function at `/api/contact` (`functions/api/contact.js`), sending submissions securely to your inbox.
 
-**Web3Forms (free):**
-1. Get a free access key at **https://web3forms.com** (enter your email, receive the key).
-2. In `js/main.js`, find the comment `Option B` inside the contact-form handler and replace the mailto block with:
-   ```js
-   fetch('https://api.web3forms.com/submit', {
-     method: 'POST',
-     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-     body: JSON.stringify({ access_key: 'YOUR_KEY', name: name, email: email, service: service, budget: budget, message: message })
-   }).then(function (r) {
-     if (r.ok) { form.reset(); showNote('Message sent · we will reply within one business day.', 'ok'); }
-     else showNote('Something went wrong. Please email hello@veloter.com directly.', 'err');
-   }).catch(function () {
-     showNote('Network error · please email hello@veloter.com directly.', 'err');
-   });
-   ```
+### Step 1: Get a free key
+1. Get a free access key at **https://web3forms.com** (enter `veloterlabs@gmail.com`).
+2. Copy the access key sent to your inbox.
 
-**Formspree alternative:** create a form at **https://formspree.io**, then use the same snippet with `https://formspree.io/f/YOUR_FORM_ID` (a matching example is already commented in `main.js`).
+### Step 2: Add to Cloudflare Environment Variables
+In your Cloudflare Pages dashboard:
+- Go to **Settings** → **Variables and Secrets** (or during project creation under **Environment variables**).
+- Add variable:
+  - **Variable name:** `WEB3FORMS_ACCESS_KEY`
+  - **Value:** `your-access-key-here`
+- Save and deploy!
+
+*(Alternatively, if using Resend: set `RESEND_API_KEY` and optional `CONTACT_EMAIL`).*
+
+*If no environment variable is configured, the form automatically falls back to pre-filling the visitor's email client (`mailto:`), ensuring no messages are missed.*
 
 ## Preview locally
 
