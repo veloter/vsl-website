@@ -179,8 +179,8 @@
           'Budget: ' + budget + '\n\n' +
           'Project brief:\n' + message.trim() + '\n'
         );
-        window.location.href = 'mailto:hello@veloter.com?subject=' + subject + '&body=' + body;
-        showNote(noteMsg || 'Opening your email client, or write us directly at hello@veloter.com', 'ok');
+        window.location.href = 'mailto:veloterlabs@gmail.com?subject=' + subject + '&body=' + body;
+        showNote(noteMsg || 'Opening your email client, or write us directly at veloterlabs@gmail.com', 'ok');
       }
 
       var origBtnHtml = submitBtn ? submitBtn.innerHTML : 'Send message';
@@ -215,7 +215,7 @@
         } else if (data && data.fallback) {
           triggerMailtoFallback('Opening your email client to complete message...');
         } else {
-          showNote((data && (data.message || data.error)) || 'Something went wrong. Please email hello@veloter.com directly.', 'err');
+          showNote((data && (data.message || data.error)) || 'Something went wrong. Please email veloterlabs@gmail.com directly.', 'err');
         }
       })
       .catch(function () {
