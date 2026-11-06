@@ -15,17 +15,7 @@ export default {
           );
         }
 
-        const accessKey = env.WEB3FORMS_ACCESS_KEY || env.WEB3FORMS_KEY;
-        if (!accessKey) {
-          return new Response(
-            JSON.stringify({
-              success: false,
-              fallback: true,
-              message: "WEB3FORMS_ACCESS_KEY is not configured in Cloudflare environment variables."
-            }),
-            { status: 200, headers: { "Content-Type": "application/json" } }
-          );
-        }
+        const accessKey = env.WEB3FORMS_ACCESS_KEY || env.WEB3FORMS_KEY || "583297e4-5ec3-4150-9c19-effa43299230";
 
         const web3Res = await fetch("https://api.web3forms.com/submit", {
           method: "POST",

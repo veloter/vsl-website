@@ -170,6 +170,25 @@
         return;
       }
 
+      var WEB3FORMS_KEY = '583297e4-5ec3-4150-9c19-effa43299230';
+
+      function submitToWeb3Direct() {
+        return fetch('https://api.web3forms.com/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({
+            access_key: WEB3FORMS_KEY,
+            from_name: 'Veloter Software Lab Inquiries',
+            subject: 'New Lead: ' + (service || 'General') + ' from ' + name.trim(),
+            name: name.trim(),
+            email: email.trim(),
+            service: service,
+            budget: budget,
+            message: message.trim()
+          })
+        }).then(function (res) { return res.json(); });
+      }
+
       function triggerMailtoFallback(noteMsg) {
         var subject = encodeURIComponent('New project inquiry: ' + service + ' (' + name.trim() + ')');
         var body = encodeURIComponent(
@@ -190,7 +209,7 @@
       }
       showNote('Sending your message...', '');
 
-      // Dynamic serverless submission via Cloudflare Pages Function (/api/contact)
+      // First try /api/contact (Cloudflare Worker endpoint)
       fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
@@ -203,23 +222,39 @@
         })
       })
       .then(function (r) {
-        if (!r.ok && r.status === 404) {
-          return { success: false, fallback: true };
+        if (!r.ok || r.status === 404) {
+          return submitToWeb3Direct();
         }
-        return r.json().catch(function () { return { success: false, fallback: true }; });
+        return r.json().catch(function () { return submitToWeb3Direct(); });
       })
       .then(function (data) {
         if (data && data.success) {
           form.reset();
           showNote('Message sent successfully! We will reply within one business day.', 'ok');
-        } else if (data && data.fallback) {
-          triggerMailtoFallback('Opening your email client to complete message...');
         } else {
-          showNote((data && (data.message || data.error)) || 'Something went wrong. Please email veloterlabs@gmail.com directly.', 'err');
+          return submitToWeb3Direct().then(function (d2) {
+            if (d2 && d2.success) {
+              form.reset();
+              showNote('Message sent successfully! We will reply within one business day.', 'ok');
+            } else {
+              triggerMailtoFallback('Opening your email client to complete message...');
+            }
+          });
         }
       })
       .catch(function () {
-        triggerMailtoFallback('Opening your email client...');
+        return submitToWeb3Direct()
+          .then(function (data) {
+            if (data && data.success) {
+              form.reset();
+              showNote('Message sent successfully! We will reply within one business day.', 'ok');
+            } else {
+              triggerMailtoFallback('Opening your email client to complete message...');
+            }
+          })
+          .catch(function () {
+            triggerMailtoFallback('Opening your email client...');
+          });
       })
       .then(function () {
         if (submitBtn) {
